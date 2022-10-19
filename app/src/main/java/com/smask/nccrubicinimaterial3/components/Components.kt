@@ -2,12 +2,19 @@ package com.smask.nccrubicinimaterial3.components
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.util.Log
 import android.widget.DatePicker
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.util.*
@@ -101,5 +108,56 @@ fun MyTimePicker(timeState: MutableState<String>) {
             modifier = Modifier.fillMaxWidth()
         )
         { Text(text = timeState.value, modifier = Modifier.fillMaxWidth()) }
+    }
+}
+
+@Composable
+fun MyDropdown(items: kotlin.collections.List<String>, typeOfServiceState: MutableState<String>) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedIndex by remember { mutableStateOf(0) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.TopStart)
+    ) {
+        Text(items[selectedIndex], modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = { expanded = true })
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items.forEachIndexed { index, s ->
+                var enabled = true
+                if (index == 0) {
+                    enabled = false
+                }
+                DropdownMenuItem(
+                    { Text("$s") },
+                    enabled = enabled,
+                    onClick = {
+                        selectedIndex = index
+                        typeOfServiceState.value = items[selectedIndex]
+                        expanded = false
+                    })
+            }
+        }
+    }
+}
+
+@Composable
+fun myTrailingIcon() {
+    IconButton(
+        onClick = {
+            Log.d("TEST1", "myTrailingIcon: CLICKED!!!")
+        },
+    ) {
+        Icon(
+            Icons.Default.ArrowDropDown,
+            contentDescription = "",
+            tint = Color.Black
+        )
     }
 }

@@ -4,7 +4,7 @@ import android.util.Log
 import co.nedim.maildroidx.MaildroidX
 import co.nedim.maildroidx.MaildroidXType
 
-fun eeemyMailSender() {
+fun myMailSender() {
     MaildroidX.Builder()
         .smtp("smtp.gmail.com")
         .smtpUsername("servizi.rubicini@gmail.com")
@@ -20,13 +20,14 @@ fun eeemyMailSender() {
 //        .isisStartTLSEnabled()
         //or
 //        .attachments() //List<String>
-        .onCompleteCallback(object : MaildroidX.onCompleteCallback{
+        .onCompleteCallback(object : MaildroidX.onCompleteCallback {
             override val timeout: Long = 3000
             override fun onSuccess() {
-                Log.d("MaildroidX",  "SUCCESS")
+                Log.d("MaildroidX", "SUCCESS")
             }
+
             override fun onFail(errorMessage: String) {
-                Log.d("MaildroidX",  "FAIL")
+                Log.d("MaildroidX", "FAIL")
             }
         })
         .mail()

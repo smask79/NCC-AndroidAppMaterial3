@@ -1,10 +1,11 @@
 package com.smask.nccrubicinimaterial3
 
-import SimpleEmailSender
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -13,13 +14,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,9 +26,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.smask.nccrubicinimaterial3.components.MyDatePicker
+import com.smask.nccrubicinimaterial3.components.MyDropdown
 import com.smask.nccrubicinimaterial3.components.MyTimePicker
+import com.smask.nccrubicinimaterial3.components.myTrailingIcon
 import com.smask.nccrubicinimaterial3.ui.theme.NccRubiciniMaterial3Theme
-import com.smask.nccrubicinimaterial3.utils.eeemyMailSender
+import com.smask.nccrubicinimaterial3.utils.myMailSender
 import java.util.*
 
 class MainActivity : ComponentActivity() {
@@ -66,22 +67,6 @@ fun NCCRubiciniApp() {
                         overflow = TextOverflow.Ellipsis
                     )
                 },
-//                navigationIcon = {
-//                    IconButton(onClick = { /* doSomething() */ }) {
-//                        Icon(
-//                            imageVector = Icons.Filled.Menu,
-//                            contentDescription = "Localized description"
-//                        )
-//                    }
-//                },
-//                actions = {
-//                    IconButton(onClick = { /* doSomething() */ }) {
-//                        Icon(
-//                            imageVector = Icons.Filled.Favorite,
-//                            contentDescription = "Localized description"
-//                        )
-//                    }
-//                }
             )
         },
         content = {
@@ -171,6 +156,7 @@ fun BookingForm(
     privacyState: MutableState<Boolean>,
     function: () -> Unit
 ) {
+    val items = listOf("Type of Service", "Tranfer", "Disposal")
     val keyboardController = LocalSoftwareKeyboardController.current
     OutlinedTextField(
         value = nameState.value,
@@ -255,7 +241,9 @@ fun BookingForm(
     OutlinedTextField(
         value = typeOfServiceState.value,
         onValueChange = { typeOfServiceState.value = it },
+        readOnly = true,
         label = { Text("Type of service") },
+        trailingIcon = { myTrailingIcon() },
         singleLine = true,
         keyboardActions = KeyboardActions(onDone = {
             keyboardController?.hide()
@@ -266,6 +254,7 @@ fun BookingForm(
             .padding(10.dp)
 //            .clickable { MailFormViewModel.showDatePickerDialog(context)}
     )
+    MyDropdown(items, typeOfServiceState)
     Row(verticalAlignment = Alignment.CenterVertically) {
         Checkbox(
             checked = privacyState.value,
@@ -276,7 +265,7 @@ fun BookingForm(
 
     if (privacyState.value) {
         Button(
-            onClick = { eeemyMailSender() },
+            onClick = { myMailSender() },
             contentPadding = ButtonDefaults.ButtonWithIconContentPadding
         ) {
             Icon(
@@ -290,20 +279,6 @@ fun BookingForm(
     }
 
 }
-
-fun myMailSender() {
-    SimpleEmailSender()
-        .setServer("smtp.gmail.com")
-        .setHost(465)
-        .setFrom("RubiciniApp")
-        .setTo("smask80@gmail.com")
-        .setUsername("servizi.rubicini@gmail.com")
-        .setPassword("zuzmgnavaqalumow")
-        .setSubject("Test")
-        .setContent("Speriamo bene")
-        .send()
-}
-
 
 @Preview(showBackground = true)
 @Composable
