@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -18,17 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.smask.nccrubicinimaterial3.components.MyDatePicker
-import com.smask.nccrubicinimaterial3.components.MyDropdown
-import com.smask.nccrubicinimaterial3.components.MyTimePicker
-import com.smask.nccrubicinimaterial3.components.myTrailingIcon
+import com.smask.nccrubicinimaterial3.components.*
 import com.smask.nccrubicinimaterial3.ui.theme.NccRubiciniMaterial3Theme
 import com.smask.nccrubicinimaterial3.utils.myMailSender
 import java.util.*
@@ -91,7 +85,7 @@ fun MainContent() {
         mutableStateOf("")
     }
 
-    val mobileNumber = remember {
+    val phoneNumber = remember {
         mutableStateOf("")
     }
 
@@ -129,7 +123,7 @@ fun MainContent() {
 
     BookingForm(
         nameState = name,
-        mobileNumberState = mobileNumber,
+        phoneNumberState = phoneNumber,
         departurePlaceState = departurePlace,
         arrivalPlaceState = arrivalPlace,
         dateState = date,
@@ -145,7 +139,7 @@ fun MainContent() {
 @Composable
 fun BookingForm(
     nameState: MutableState<String>,
-    mobileNumberState: MutableState<String>,
+    phoneNumberState: MutableState<String>,
     departurePlaceState: MutableState<String>,
     arrivalPlaceState: MutableState<String>,
     dateState: MutableState<String>,
@@ -156,7 +150,9 @@ fun BookingForm(
     privacyState: MutableState<Boolean>,
     function: () -> Unit
 ) {
-    val items = listOf("Type of Service", "Tranfer", "Disposal")
+    val itemsTypeOfService = listOf("Tranfer", "Disposal")
+    val itemsPassengers = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+
     val keyboardController = LocalSoftwareKeyboardController.current
     OutlinedTextField(
         value = nameState.value,
@@ -171,9 +167,9 @@ fun BookingForm(
             .padding(10.dp)
     )
     OutlinedTextField(
-        value = mobileNumberState.value,
-        onValueChange = { mobileNumberState.value = it },
-        label = { Text("Mobile Number") },
+        value = phoneNumberState.value,
+        onValueChange = { phoneNumberState.value = it },
+        label = { Text("Phone Number") },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
         keyboardActions = KeyboardActions(onDone = {
@@ -225,36 +221,11 @@ fun BookingForm(
             .fillMaxWidth()
             .padding(10.dp)
     )
-    OutlinedTextField(
-        value = numberOfPassengersState.value,
-        onValueChange = { numberOfPassengersState.value = it },
-        label = { Text("Passengers") },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        keyboardActions = KeyboardActions(onDone = {
-            this.defaultKeyboardAction(imeAction = ImeAction.Next)
-        }),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp)
-    )
-    OutlinedTextField(
-        value = typeOfServiceState.value,
-        onValueChange = { typeOfServiceState.value = it },
-        readOnly = true,
-        label = { Text("Type of service") },
-        trailingIcon = { myTrailingIcon() },
-        singleLine = true,
-        keyboardActions = KeyboardActions(onDone = {
-            keyboardController?.hide()
 
-        }),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp)
-//            .clickable { MailFormViewModel.showDatePickerDialog(context)}
-    )
-    MyDropdown(items, typeOfServiceState)
+    MyExposedDropdownMenu(itemsPassengers, numberOfPassengersState, "Passengers")
+
+    MyExposedDropdownMenu(itemsTypeOfService, typeOfServiceState, "Type of service")
+
     Row(verticalAlignment = Alignment.CenterVertically) {
         Checkbox(
             checked = privacyState.value,
@@ -265,7 +236,20 @@ fun BookingForm(
 
     if (privacyState.value) {
         Button(
-            onClick = { myMailSender() },
+            onClick = {
+                PrepareAndSendEmail(
+                    nameState.value,
+                    phoneNumberState.value,
+                    departurePlaceState.value,
+                    arrivalPlaceState.value,
+                    dateState.value,
+                    timeState.value,
+                    emailState.value,
+                    numberOfPassengersState.value,
+                    typeOfServiceState.value,
+                    privacyState.value
+                )
+            },
             contentPadding = ButtonDefaults.ButtonWithIconContentPadding
         ) {
             Icon(
@@ -278,6 +262,68 @@ fun BookingForm(
         }
     }
 
+}
+
+fun PrepareAndSendEmail(
+    name: String,
+    phoneNumber: String,
+    departurePlace: String,
+    arrivalPlace: String,
+    date: String,
+    time: String,
+    email: String,
+    numberOfPassengers: String,
+    typeOfService: String,
+    privacy: Boolean,
+) {
+    val bodyMessage = buildString {
+        append("<h1>Booking from Rubicini Android App</h1>")
+        append("<table style=\"border-collapse: collapse; width: 40%;\" border=\"1\">")
+        append("<tbody>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Name and Surname</td>")
+        append("<td style=\"width: 70%;\">$name</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Phone Number</td>")
+        append("<td style=\"width: 70%;\">$phoneNumber</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Departure</td>")
+        append("<td style=\"width: 70%;\">$departurePlace</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Arrival</td>")
+        append("<td style=\"width: 70%;\">$arrivalPlace</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Date</td>")
+        append("<td style=\"width: 70%;\">$date</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Time</td>")
+        append("<td style=\"width: 70%;\">$time</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Email</td>")
+        append("<td style=\"width: 70%;\">$email</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Number of passengers</td>")
+        append("<td style=\"width: 70%;\">$numberOfPassengers</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Type of service</td>")
+        append("<td style=\"width: 70%;\">$typeOfService</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Privacy accepted</td>")
+        append("<td style=\"width: 70%;\">$privacy</td>")
+        append("</tr>")
+        append("</tbody>")
+        append("</table>")
+    }
+    myMailSender(bodyMessage)
 }
 
 @Preview(showBackground = true)

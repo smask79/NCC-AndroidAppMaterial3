@@ -4,7 +4,7 @@ import android.util.Log
 import co.nedim.maildroidx.MaildroidX
 import co.nedim.maildroidx.MaildroidXType
 
-fun myMailSender() {
+fun myMailSender(body: String) {
     MaildroidX.Builder()
         .smtp("smtp.gmail.com")
         .smtpUsername("servizi.rubicini@gmail.com")
@@ -12,9 +12,10 @@ fun myMailSender() {
         .port("465")
         .type(MaildroidXType.HTML)
         .to("smask80@gmail.com")
+        //.to("info@rubiciniautonoleggio.it")
         .from("RubiciniApp")
-        .subject("Test")
-        .body("Speriamo bene")
+        .subject("Email di prova da nuova Android App")
+        .body(body)
 //        .attachment()
 //        .isJavascriptDisabled()
 //        .isisStartTLSEnabled()

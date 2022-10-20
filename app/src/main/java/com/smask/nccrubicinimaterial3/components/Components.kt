@@ -8,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -94,8 +92,8 @@ fun MyTimePicker(timeState: MutableState<String>) {
     val mTimePickerDialog = TimePickerDialog(
         mContext,
         { _, mHour: Int, mMinute: Int ->
-            timeState.value = "$mHour:$mMinute"
-        }, mHour, mMinute, false
+            timeState.value = String.format("%02d:%02d", mHour, mMinute)
+        }, mHour, mMinute, true
     )
 
     OutlinedCard(
@@ -112,7 +110,11 @@ fun MyTimePicker(timeState: MutableState<String>) {
 }
 
 @Composable
-fun MyDropdown(items: kotlin.collections.List<String>, typeOfServiceState: MutableState<String>) {
+fun MyDropdown(
+    items: kotlin.collections.List<String>,
+    typeOfServiceState: MutableState<String>,
+    firstEnabled: Boolean = true
+) {
     var expanded by remember { mutableStateOf(false) }
     var selectedIndex by remember { mutableStateOf(0) }
     Box(
@@ -120,9 +122,10 @@ fun MyDropdown(items: kotlin.collections.List<String>, typeOfServiceState: Mutab
             .fillMaxSize()
             .wrapContentSize(Alignment.TopStart)
     ) {
-        Text(items[selectedIndex], modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = { expanded = true })
+        Text(
+            items[selectedIndex], modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = { expanded = true })
         )
         DropdownMenu(
             expanded = expanded,
@@ -131,7 +134,7 @@ fun MyDropdown(items: kotlin.collections.List<String>, typeOfServiceState: Mutab
         ) {
             items.forEachIndexed { index, s ->
                 var enabled = true
-                if (index == 0) {
+                if (index == 0 && firstEnabled) {
                     enabled = false
                 }
                 DropdownMenuItem(
@@ -142,6 +145,56 @@ fun MyDropdown(items: kotlin.collections.List<String>, typeOfServiceState: Mutab
                         typeOfServiceState.value = items[selectedIndex]
                         expanded = false
                     })
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyExposedDropdownMenu(
+    items: kotlin.collections.List<String>,
+    genericState: MutableState<String>,
+    myLabel: String
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = {
+            expanded = !expanded
+        }
+    ) {
+        OutlinedTextField(
+            readOnly = true,
+            value = genericState.value,
+            onValueChange = { },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+                .padding(10.dp),
+            label = { Text(myLabel) },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded
+                )
+            },
+            colors = ExposedDropdownMenuDefaults.textFieldColors()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = {
+                expanded = false
+            }
+        ) {
+            items.forEach { selectionOption ->
+                DropdownMenuItem(
+                    { Text(text = selectionOption) },
+                    onClick = {
+                        genericState.value = selectionOption
+                        expanded = false
+                    }
+                )
             }
         }
     }
