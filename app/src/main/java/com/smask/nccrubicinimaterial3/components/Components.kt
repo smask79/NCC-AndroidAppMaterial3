@@ -10,18 +10,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.smask.nccrubicinimaterial3.utils.MAIL_CLEANUP_STATUS
+import com.togitech.ccp.component.TogiCountryCodePicker
+import com.togitech.ccp.data.utils.getDefaultLangCode
+import com.togitech.ccp.data.utils.getDefaultPhoneCode
+import com.togitech.ccp.data.utils.getLibCountries
 import java.util.*
 
 // Creating a composable function to
 // create two Images and a spacer between them
 // Calling this function as content
 // in the above function
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyDatePicker(dateState: MutableState<String>) {
 
@@ -53,7 +59,8 @@ fun MyDatePicker(dateState: MutableState<String>) {
     val mDatePickerDialog = DatePickerDialog(
         mContext,
         { _: DatePicker, mYear: Int, mMonth: Int, mDayOfMonth: Int ->
-            dateState.value = "$mDayOfMonth/${mMonth + 1}/$mYear"
+            dateState.value = String.format("%02d/%02d/%04d", mDayOfMonth, mMonth + 1, mYear)
+            //dateState.value = "$mDayOfMonth/${mMonth + 1}/$mYear"
         }, mYear, mMonth, mDay
     )
 
@@ -111,7 +118,7 @@ fun MyTimePicker(timeState: MutableState<String>) {
 
 @Composable
 fun MyDropdown(
-    items: kotlin.collections.List<String>,
+    items: List<String>,
     typeOfServiceState: MutableState<String>,
     firstEnabled: Boolean = true
 ) {
@@ -138,7 +145,7 @@ fun MyDropdown(
                     enabled = false
                 }
                 DropdownMenuItem(
-                    { Text("$s") },
+                    { Text(s) },
                     enabled = enabled,
                     onClick = {
                         selectedIndex = index
@@ -153,7 +160,7 @@ fun MyDropdown(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyExposedDropdownMenu(
-    items: kotlin.collections.List<String>,
+    items: List<String>,
     genericState: MutableState<String>,
     myLabel: String
 ) {
@@ -201,7 +208,7 @@ fun MyExposedDropdownMenu(
 }
 
 @Composable
-fun myTrailingIcon() {
+fun MyTrailingIcon() {
     IconButton(
         onClick = {
             Log.d("TEST1", "myTrailingIcon: CLICKED!!!")
@@ -212,5 +219,72 @@ fun myTrailingIcon() {
             contentDescription = "",
             tint = Color.Black
         )
+    }
+}
+
+@Composable
+fun MyDialog(myIcon: ImageVector, myTitle: String, myText: String, mailStatus: MutableState<Int>) {
+    val openDialog = remember { mutableStateOf(true) }
+
+    if (openDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                // Dismiss the dialog when the user clicks outside the dialog or on the back
+                // button. If you want to disable that functionality, simply use an empty
+                // onDismissRequest.
+                openDialog.value = false
+                mailStatus.value = MAIL_CLEANUP_STATUS
+            },
+            icon = { Icon(myIcon, contentDescription = null) },
+            title = {
+                Text(text = myTitle)
+            },
+            text = {
+                Text(text = myText)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        openDialog.value = false
+                        mailStatus.value = MAIL_CLEANUP_STATUS
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+//            dismissButton = {
+//                TextButton(
+//                    onClick = {
+//                        openDialog.value = false
+//                    }
+//                ) {
+//                    Text("Dismiss")
+//                }
+//            }
+        )
+    }
+}
+
+@Composable
+fun MyTogiCountryCodePicker(phoneNumberState: MutableState<String>) {
+    val context = LocalContext.current
+    var phoneCode by rememberSaveable { mutableStateOf(getDefaultPhoneCode(context)) }
+    var defaultLang by rememberSaveable { mutableStateOf(getDefaultLangCode(context)) }
+    val phoneNumber = rememberSaveable { mutableStateOf("") }
+
+    TogiCountryCodePicker(
+        text = phoneNumber.value,
+        onValueChange = { phoneNumber.value = it },
+        defaultCountry = getLibCountries().single { it.countryCode == defaultLang },
+        pickedCountry = {
+            phoneCode = it.countryPhoneCode
+            defaultLang = it.countryCode
+        },
+        error = true
+    )
+    if (phoneNumber.value.isEmpty()) {
+        phoneNumberState.value = ""
+    } else {
+        phoneNumberState.value = "$phoneCode${phoneNumber.value}"
     }
 }

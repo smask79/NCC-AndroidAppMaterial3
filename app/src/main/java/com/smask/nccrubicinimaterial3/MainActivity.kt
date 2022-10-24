@@ -2,6 +2,7 @@ package com.smask.nccrubicinimaterial3
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Patterns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,14 +25,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.smask.nccrubicinimaterial3.components.*
 import com.smask.nccrubicinimaterial3.ui.theme.NccRubiciniMaterial3Theme
-import com.smask.nccrubicinimaterial3.utils.myMailSender
+import com.smask.nccrubicinimaterial3.utils.*
 import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen()
         setContent {
             NccRubiciniMaterial3Theme {
                 MyApp {
@@ -121,6 +126,10 @@ fun MainContent() {
         mutableStateOf(false)
     }
 
+    val mailStatus = remember {
+        mutableStateOf(MAIL_INITIAL_STATUS)
+    }
+
     BookingForm(
         nameState = name,
         phoneNumberState = phoneNumber,
@@ -131,7 +140,8 @@ fun MainContent() {
         emailState = email,
         numberOfPassengersState = numberOfPassengers,
         typeOfServiceState = typeOfService,
-        privacyState = privacy
+        privacyState = privacy,
+        mailStatusState = mailStatus
     ) { }
 }
 
@@ -148,12 +158,41 @@ fun BookingForm(
     numberOfPassengersState: MutableState<String>,
     typeOfServiceState: MutableState<String>,
     privacyState: MutableState<Boolean>,
+    mailStatusState: MutableState<Int>,
     function: () -> Unit
 ) {
-    val itemsTypeOfService = listOf("Tranfer", "Disposal")
+    val itemsTypeOfService = listOf("Transfer", "Disposal")
     val itemsPassengers = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
-
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    when (mailStatusState.value) {
+        MAIL_SUCCESS_STATUS -> MyDialog(
+            myIcon = Icons.Filled.Info,
+            myTitle = "Email sent",
+            myText = "Your booking request is sent to Rubicini NCC.",
+            mailStatusState
+        )
+        MAIL_FAILURE_STATUS -> MyDialog(
+            myIcon = Icons.Filled.Warning,
+            myTitle = "Impossible send email",
+            myText = "ERROR sending email. Try again later.",
+            mailStatusState
+        )
+        MAIL_CLEANUP_STATUS -> resetAllValues(
+            nameState,
+            phoneNumberState,
+            departurePlaceState,
+            arrivalPlaceState,
+            dateState,
+            timeState,
+            emailState,
+            numberOfPassengersState,
+            typeOfServiceState,
+            privacyState,
+            mailStatusState
+        )
+    }
+
     OutlinedTextField(
         value = nameState.value,
         onValueChange = { nameState.value = it },
@@ -166,19 +205,9 @@ fun BookingForm(
             .fillMaxWidth()
             .padding(10.dp)
     )
-    OutlinedTextField(
-        value = phoneNumberState.value,
-        onValueChange = { phoneNumberState.value = it },
-        label = { Text("Phone Number") },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-        keyboardActions = KeyboardActions(onDone = {
-            this.defaultKeyboardAction(imeAction = ImeAction.Next)
-        }),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp)
-    )
+
+    MyTogiCountryCodePicker(phoneNumberState)
+
     OutlinedTextField(
         value = departurePlaceState.value,
         onValueChange = { departurePlaceState.value = it },
@@ -196,9 +225,7 @@ fun BookingForm(
         onValueChange = { arrivalPlaceState.value = it },
         label = { Text("Arrival") },
         singleLine = true,
-        keyboardActions = KeyboardActions(onDone = {
-            this.defaultKeyboardAction(imeAction = ImeAction.Next)
-        }),
+        keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
@@ -210,13 +237,12 @@ fun BookingForm(
     OutlinedTextField(
         value = emailState.value,
         onValueChange = { emailState.value = it },
-        label = { Text("E-Mail") },
+        label = { Text("* E-Mail") },
         placeholder = { Text("example@gmail.com") },
+        isError = !Patterns.EMAIL_ADDRESS.matcher(emailState.value).matches(),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-        keyboardActions = KeyboardActions(onDone = {
-            this.defaultKeyboardAction(imeAction = ImeAction.Next)
-        }),
+        keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
@@ -234,10 +260,13 @@ fun BookingForm(
         Text("Accept Privacy Policy and Terms of Use")
     }
 
-    if (privacyState.value) {
+    if (privacyState.value && mailStatusState.value == MAIL_INITIAL_STATUS
+        && Patterns.EMAIL_ADDRESS.matcher(emailState.value).matches()
+    ) {
         Button(
             onClick = {
-                PrepareAndSendEmail(
+                mailStatusState.value = MAIL_SENDING_STATUS
+                prepareAndSendEmail(
                     nameState.value,
                     phoneNumberState.value,
                     departurePlaceState.value,
@@ -247,7 +276,8 @@ fun BookingForm(
                     emailState.value,
                     numberOfPassengersState.value,
                     typeOfServiceState.value,
-                    privacyState.value
+                    privacyState.value,
+                    mailStatusState
                 )
             },
             contentPadding = ButtonDefaults.ButtonWithIconContentPadding
@@ -261,10 +291,39 @@ fun BookingForm(
             Text("Send Email")
         }
     }
+    if (mailStatusState.value == MAIL_SENDING_STATUS) {
+        CircularProgressIndicator()
+    }
 
 }
 
-fun PrepareAndSendEmail(
+fun resetAllValues(
+    nameState: MutableState<String>,
+    phoneNumberState: MutableState<String>,
+    departurePlaceState: MutableState<String>,
+    arrivalPlaceState: MutableState<String>,
+    dateState: MutableState<String>,
+    timeState: MutableState<String>,
+    emailState: MutableState<String>,
+    numberOfPassengersState: MutableState<String>,
+    typeOfServiceState: MutableState<String>,
+    privacyState: MutableState<Boolean>,
+    mailStatusState: MutableState<Int>
+) {
+    nameState.value = ""
+    //phoneNumberState.value = ""
+    departurePlaceState.value = ""
+    arrivalPlaceState.value = ""
+    dateState.value = "Date"
+    timeState.value = "Time"
+    emailState.value = ""
+    numberOfPassengersState.value = ""
+    typeOfServiceState.value = ""
+    privacyState.value = false
+    mailStatusState.value = MAIL_INITIAL_STATUS
+}
+
+fun prepareAndSendEmail(
     name: String,
     phoneNumber: String,
     departurePlace: String,
@@ -275,6 +334,7 @@ fun PrepareAndSendEmail(
     numberOfPassengers: String,
     typeOfService: String,
     privacy: Boolean,
+    mailStatusState: MutableState<Int>
 ) {
     val bodyMessage = buildString {
         append("<h1>Booking from Rubicini Android App</h1>")
@@ -323,7 +383,7 @@ fun PrepareAndSendEmail(
         append("</tbody>")
         append("</table>")
     }
-    myMailSender(bodyMessage)
+    myMailSender(bodyMessage, mailStatusState)
 }
 
 @Preview(showBackground = true)
