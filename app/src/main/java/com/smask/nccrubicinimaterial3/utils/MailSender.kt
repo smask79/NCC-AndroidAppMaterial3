@@ -1,6 +1,5 @@
 package com.smask.nccrubicinimaterial3.utils
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import co.nedim.maildroidx.MaildroidX
 import co.nedim.maildroidx.MaildroidXType
@@ -12,10 +11,10 @@ fun myMailSender(body: String, myResult: MutableState<Int>) {
         .smtpPassword("zuzmgnavaqalumow")
         .port("465")
         .type(MaildroidXType.HTML)
-        .to("smask80@gmail.com")
-        //.to("info@rubiciniautonoleggio.it")
+        //.to("smask80@gmail.com")
+        .to("info@rubiciniautonoleggio.it")
         .from("RubiciniApp")
-        .subject("Email di prova da nuova Android App")
+        .subject("Prenotazione da Android App")
         .body(body)
 //        .attachment()
 //        .isJavascriptDisabled()
@@ -25,12 +24,12 @@ fun myMailSender(body: String, myResult: MutableState<Int>) {
         .onCompleteCallback(object : MaildroidX.onCompleteCallback {
             override val timeout: Long = 3000
             override fun onSuccess() {
-                Log.d("MaildroidX", "SUCCESS")
+//                Log.d("MaildroidX", "SUCCESS")
                 myResult.value = MAIL_SUCCESS_STATUS
             }
 
             override fun onFail(errorMessage: String) {
-                Log.d("MaildroidX", "FAIL")
+//                Log.d("MaildroidX", "FAIL")
                 myResult.value = MAIL_FAILURE_STATUS
             }
         })
