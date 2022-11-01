@@ -6,7 +6,7 @@
     <!-- Splash Screen Theme. -->
     <style name="Theme.CustomSplashScreenTheme" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/white</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_round</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_rubicini_round</item>
         <item name="windowSplashScreenAnimationDuration">600</item>
         <item name="postSplashScreenTheme">@style/Theme.NccRubiciniMaterial3</item>
     </style>

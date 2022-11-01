@@ -122,6 +122,10 @@ fun MainContent() {
         mutableStateOf("")
     }
 
+    val typeOfCar = remember {
+        mutableStateOf("")
+    }
+
     val privacy = remember {
         mutableStateOf(false)
     }
@@ -140,6 +144,7 @@ fun MainContent() {
         emailState = email,
         numberOfPassengersState = numberOfPassengers,
         typeOfServiceState = typeOfService,
+        typeOfCarState = typeOfCar,
         privacyState = privacy,
         mailStatusState = mailStatus
     ) { }
@@ -157,12 +162,14 @@ fun BookingForm(
     emailState: MutableState<String>,
     numberOfPassengersState: MutableState<String>,
     typeOfServiceState: MutableState<String>,
+    typeOfCarState: MutableState<String>,
     privacyState: MutableState<Boolean>,
     mailStatusState: MutableState<Int>,
     function: () -> Unit
 ) {
-    val itemsTypeOfService = listOf("Transfer", "Disposal")
     val itemsPassengers = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+    val itemsTypeOfService = listOf("Transfer", "Disposal")
+    val itemsTypeOfCar = listOf("Car", "Van")
     val keyboardController = LocalSoftwareKeyboardController.current
 
     when (mailStatusState.value) {
@@ -188,6 +195,7 @@ fun BookingForm(
             emailState,
             numberOfPassengersState,
             typeOfServiceState,
+            typeOfCarState,
             privacyState,
             mailStatusState
         )
@@ -252,6 +260,8 @@ fun BookingForm(
 
     MyExposedDropdownMenu(itemsTypeOfService, typeOfServiceState, "Type of service")
 
+    MyExposedDropdownMenu(itemsTypeOfCar, typeOfCarState, "Type of vehicle")
+
     Row(verticalAlignment = Alignment.CenterVertically) {
         Checkbox(
             checked = privacyState.value,
@@ -276,6 +286,7 @@ fun BookingForm(
                     emailState.value,
                     numberOfPassengersState.value,
                     typeOfServiceState.value,
+                    typeOfCarState.value,
                     privacyState.value,
                     mailStatusState
                 )
@@ -307,6 +318,7 @@ fun resetAllValues(
     emailState: MutableState<String>,
     numberOfPassengersState: MutableState<String>,
     typeOfServiceState: MutableState<String>,
+    typeOfCarState: MutableState<String>,
     privacyState: MutableState<Boolean>,
     mailStatusState: MutableState<Int>
 ) {
@@ -319,6 +331,7 @@ fun resetAllValues(
     emailState.value = ""
     numberOfPassengersState.value = ""
     typeOfServiceState.value = ""
+    typeOfCarState.value = ""
     privacyState.value = false
     mailStatusState.value = MAIL_INITIAL_STATUS
 }
@@ -333,6 +346,7 @@ fun prepareAndSendEmail(
     email: String,
     numberOfPassengers: String,
     typeOfService: String,
+    typeOfCar: String,
     privacy: Boolean,
     mailStatusState: MutableState<Int>
 ) {
@@ -375,6 +389,10 @@ fun prepareAndSendEmail(
         append("<tr>")
         append("<td style=\"width: 30%; background: LightGray\">Type of service</td>")
         append("<td style=\"width: 70%;\">$typeOfService</td>")
+        append("</tr>")
+        append("<tr>")
+        append("<td style=\"width: 30%; background: LightGray\">Type of vehicle</td>")
+        append("<td style=\"width: 70%;\">$typeOfCar</td>")
         append("</tr>")
         append("<tr>")
         append("<td style=\"width: 30%; background: LightGray\">Privacy accepted</td>")
